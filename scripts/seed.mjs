@@ -1,7 +1,29 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/shopyfy_2027';
+if (!process.env.MONGODB_URI) {
+  try {
+    const envPath = path.resolve(process.cwd(), '.env.local');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf-8');
+      for (const line of envContent.split('\n')) {
+        const match = line.match(/^([^=]+)=(.*)$/);
+        if (match) {
+          process.env[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, '');
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+let MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/shopyfy_2027';
+if (MONGODB_URI.includes('.mongodb.net/') && !MONGODB_URI.split('.mongodb.net/')[1]?.split('?')[0]) {
+  MONGODB_URI = MONGODB_URI.replace('.mongodb.net/', '.mongodb.net/shopyfy_2027');
+}
 
 async function seed() {
   console.log('Connecting to MongoDB at:', MONGODB_URI);
